@@ -96,7 +96,7 @@ function App() {
                 <button onClick={() => numberClick("1")}>1</button>
                 <button onClick={() => numberClick("2")}>2</button>
                 <button onClick={() => numberClick("3")}>3</button>
-                <button onClick={() => operatorClick("*")}>*</button>
+                <button onClick={() => operatorClick("*")}>x</button>
                 <button onClick={() => numberClick("0")}>0</button>
                 <button onClick={equalClick}>=</button>
                 <button onClick={reset}>C</button>
