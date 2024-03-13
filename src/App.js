@@ -7,48 +7,125 @@ const initialState = {
     num2: "",
     operator: "",
     result: "",
+    waitingForOperand: false,
 };
 
 const reducer = (state, action) => {
     switch (action.type) {
         case "SET_DISPLAY":
             return { ...state, display: action.payload };
-        case "SET_NUM1":
-            return {
-                ...state,
-                num1: state.num1 + action.payload,
-                display: state.num1 + action.payload,
-            };
-        case "SET_NUM2":
-            return {
-                ...state,
-                num2: state.num2 + action.payload,
-                display: state.num2 + action.payload,
-            };
+        case "SET_NUM":
+            if (state.waitingForOperand) {
+                return {
+                    ...state,
+                    num2: action.payload,
+                    display: action.payload,
+                    waitingForOperand: false,
+                };
+            } else {
+                return {
+                    ...state,
+                    num1:
+                        state.num1 === "0"
+                            ? action.payload
+                            : state.num1 + action.payload,
+                    display:
+                        state.num1 === "0"
+                            ? action.payload
+                            : state.num1 + action.payload,
+                };
+            }
+        case "SET_DECIMAL":
+            if (state.waitingForOperand) {
+                return {
+                    ...state,
+                    num2: "0.",
+                    display: "0.",
+                    waitingForOperand: false,
+                };
+            } else if (!state.num1.includes(".")) {
+                return {
+                    ...state,
+                    num1: state.num1 === "" ? "0." : state.num1 + ".",
+                    display: state.num1 === "" ? "0." : state.num1 + ".",
+                };
+            }
+            return state;
         case "SET_OPERATOR":
-            return {
-                ...state,
-                operator: action.payload,
-                display: state.display + " " + action.payload + " ",
-            };
+            if (state.num1 !== "") {
+                if (state.num2 !== "") {
+                    let result;
+                    switch (state.operator) {
+                        case "+":
+                            result =
+                                parseFloat(state.num1) + parseFloat(state.num2);
+                            break;
+                        case "-":
+                            result =
+                                parseFloat(state.num1) - parseFloat(state.num2);
+                            break;
+                        case "*":
+                            result =
+                                parseFloat(state.num1) * parseFloat(state.num2);
+                            break;
+                        case "/":
+                            result =
+                                parseFloat(state.num1) / parseFloat(state.num2);
+                            break;
+                        default:
+                            result = "";
+                    }
+                    return {
+                        ...state,
+                        num1: result.toString(),
+                        num2: "",
+                        display: result.toString(),
+                        operator: action.payload,
+                        waitingForOperand: true,
+                    };
+                } else {
+                    return {
+                        ...state,
+                        operator: action.payload,
+                        display: state.num1 + action.payload,
+                        waitingForOperand: true,
+                    };
+                }
+            }
+            return state;
+        case "CALCULATE":
+            if (state.num2 !== "") {
+                let result;
+                switch (state.operator) {
+                    case "+":
+                        result =
+                            parseFloat(state.num1) + parseFloat(state.num2);
+                        break;
+                    case "-":
+                        result =
+                            parseFloat(state.num1) - parseFloat(state.num2);
+                        break;
+                    case "*":
+                        result =
+                            parseFloat(state.num1) * parseFloat(state.num2);
+                        break;
+                    case "/":
+                        result =
+                            parseFloat(state.num1) / parseFloat(state.num2);
+                        break;
+                    default:
+                        result = "";
+                }
+                return {
+                    ...state,
+                    result: result.toString(),
+                    display: result.toString(),
+                    waitingForOperand: true,
+                };
+            }
+            return state;
         case "CLEAR":
             return initialState;
-        case "CALCULATE":
-            let result;
-            switch (state.operator) {
-                case "+":
-                    result = parseFloat(state.num1) + parseFloat(state.num2);
-                    break;
-                case "-":
-                    result = parseFloat(state.num1) - parseFloat(state.num2);
-                    break;
-                case "*":
-                    result = parseFloat(state.num1) * parseFloat(state.num2);
-                    break;
-                default:
-                    result = "";
-            }
-            return { ...state, result: result, display: result };
         default:
             return state;
     }
@@ -58,26 +135,22 @@ function App() {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const numberClick = (number) => {
-        if (state.operator === "") {
-            dispatch({ type: "SET_NUM1", payload: number });
-        } else {
-            dispatch({ type: "SET_NUM2", payload: number });
-        }
+        dispatch({ type: "SET_NUM", payload: number });
+    };
+
+    const decimalClick = () => {
+        dispatch({ type: "SET_DECIMAL" });
     };
 
     const operatorClick = (operator) => {
-        if (state.num1 !== "") {
-            dispatch({ type: "SET_OPERATOR", payload: operator });
-        }
+        dispatch({ type: "SET_OPERATOR", payload: operator });
     };
 
     const equalClick = () => {
-        if (state.num2 !== "") {
-            dispatch({ type: "CALCULATE" });
-        }
+        dispatch({ type: "CALCULATE" });
     };
 
-    const reset = () => {
+    const clearClick = () => {
         dispatch({ type: "CLEAR" });
     };
 
@@ -98,8 +171,10 @@ function App() {
                 <button onClick={() => numberClick("3")}>3</button>
                 <button onClick={() => operatorClick("*")}>x</button>
                 <button onClick={() => numberClick("0")}>0</button>
+                <button onClick={decimalClick}>.</button>
+                <button onClick={() => operatorClick("/")}>/</button>
                 <button onClick={equalClick}>=</button>
-                <button onClick={reset}>C</button>
+                <button onClick={clearClick}>C</button>
             </div>
         </div>
     );
